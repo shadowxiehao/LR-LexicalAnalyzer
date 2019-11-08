@@ -1,5 +1,4 @@
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
 
 public class LR {
@@ -40,26 +39,24 @@ public class LR {
     // 1~100 代表移进
     // >101 代表规约
 
-    private Stack<Character> symbol_stack = new Stack();//符号栈
-    private Stack<Integer> state_stack = new Stack();//状态栈
-    private String input = ""; //输入串,初始化时默认加上#结尾
+    private Stack<Character> symbol_stack = new Stack<>();//符号栈
+    private Stack<Integer> state_stack = new Stack<>();//状态栈
+    private String input; //输入串,初始化时默认加上#结尾
 
-    int index=0;//记录当前读到字符串第几个字符
-    HashMap<String,Integer> keywords = new HashMap<String,Integer>();
+    private int index=0;//记录当前读到字符串第几个字符
+    private HashMap<String,Integer> keywords = new HashMap<>();
 
     private int state=0;//记录一次状态
-    Character symbol ;//记录找到的预设符号
-    int act = -1;//记录对应的表格内的数字
+    private int act = -1;//记录对应的表格内的数字
 
     public LR (String input){//初始化分析
         this.input=input+"#";//输入串加上'#' 初始化输入串
         init_keywords();
         try {
             find();//将初始输入转换成标准格式
-            symbol='#';
             state=0;
             state_stack.push(state);
-            symbol_stack.push(symbol);//初始化栈
+            symbol_stack.push('#');//初始化栈
             index=0;//指向输入串第一个,输入串初始化完成
         }catch (Exception e){
             System.out.println(e.getMessage());
@@ -111,21 +108,20 @@ public class LR {
 
 
     private void convention(){//规约
-        Character get_symbol ;
-        int get_state ;
         switch (act) {
             case 104 : {
+                //出栈,弹出一个符号和一个状态
                 symbol_stack.pop();
                 state_stack.pop();
-
+                //加入规约'E'
                 symbol_stack.push('E');
+                //将GOTO的数字推入状态栈
                 state = state_stack.peek();
                 act = table[state][keywords.get("E")];
-
                 state_stack.push(act);
                 break;
             }
-            case 103 : { }
+            case 103 : {}//这里正巧101-103处理都是一样的
             case 102: {}
             case 101 : {
                 //弹出(E)
@@ -161,7 +157,7 @@ public class LR {
     将初始输入转换成标准格式
      */
     private void find() throws Exception{//找到之后是"+","*",...中的哪一个,都不属于则报错
-        String out = "";
+        String out = "";//暂存,每次处理后先存到out,最后让input=out
         while(index<input.length()) {
             if (isDigit(input.charAt(index))) {
                 index++;
@@ -211,6 +207,4 @@ public class LR {
     {
         return digit >= '0' && digit <= '9';
     }
-
-
 }
