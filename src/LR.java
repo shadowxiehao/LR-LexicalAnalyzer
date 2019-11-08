@@ -24,29 +24,48 @@ public class LR {
 8	r2	r2	　	r2	　	r2	　
 9	r3	r3	　	r3	　	r3	　
      */
-    private int[][] table = {{-1,-1,2,-1,3,-1,1},
-                     {4,5,-1,-1,-1,0,-1},
-                     {-1,-1,2,-1,3,-1,6},
-                     {104,104,-1,104,-1,104,-1},
-                     {-1,-1,2,-1,3,-1,7},
-                     {-1,-1,2,-1,3,-1,8},
-                     {4,5,-1,9,-1,-1,-1},
-                     {101,5,-1,101,-1,101,-1},
-                     {102,102,-1,102,-1,102,-1},
-                     {103,103,-1,103,-1,103,-1},
-    };
+    private int[][] table =
+                    {{-1,-1,2,-2,3,-1,1},
+                     {4,5,-3,-2,-3,0,-10},
+                     {-1,-1,2,-2,3,-1,6},
+                     {104,104,-3,104,-3,104,-10},
+                     {-1,-1,2,-2,3,-1,7},
+                     {-1,-1,2,-2,3,-1,8},
+                     {4,5,-3,9,-3,-4,-10},
+                     {101,5,-3,101,-3,101,-10},
+                     {102,102,-3,102,-3,102,-10},
+                     {103,103,-3,103,-3,103,-10}};
+    // <-1代表
+    // 0代表接受 acc
+    // 1~100 代表移进
+    // >101 代表规约
+
     private Stack symbol_stack = new Stack();//符号栈
     private Stack state_stack = new Stack();//状态栈
     private String input = null; //输入串,初始化时默认加上#结尾
-    private int state=0;
 
     int index=0;//记录当前读到字符串第几个字符
     HashMap<String,Integer> keywords = new HashMap<String,Integer>();
 
+    private int state=0;//记录一次状态
+    String symbol = "";//记录找到的预设符号
+    int act = -1;//记录对应的表格内的数字
+
     public LR (String input){//初始化分析
         this.input=input+"#";//输入串加上'#' 初始化输入串
         init_keywords();
+        try {
+            find();//将初始输入转换成标准格式
+            symbol="#";
+            state=0;
+            state_stack.push(state);
+            symbol_stack.push(symbol);//初始化栈
+            index=0;//指向输入串第一个,输入串初始化完成
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
     }
+
     private int init_keywords(){//将输入符号 转换成 LR分析表中的对应列数
         keywords.put("+",0);
         keywords.put("*",1);
@@ -55,29 +74,20 @@ public class LR {
         keywords.put("i",4);
         keywords.put("#",5);
         keywords.put("E",6);
-
         return 0;//正常
     }
 
     public void show(){
-        String symbol = null;//记录找到的预设符号
-        int Do = -1;//记录对应的表格内的数字
+
         try{
-            state_stack.push(state);
-            symbol = find();
-            symbol_stack.push(symbol);
-            Do = table[state][keywords.get(symbol)];
-
-            if(Do<0){
-                throw new Exception("出错!分析表没有对应符号处理");
+            while( (act = table[state][keywords.get(symbol)]) !=0 ){
+                process();
             }
-            else if(Do>0&&Do<=100){
-
-            }
-            else if(Do>100){
-
+            if(act==0){
+                System.out.println("ok fine!");
             }
 
+        System.out.println(input);
 
         }catch (Exception e){
             System.out.println(e.getMessage());
@@ -86,34 +96,66 @@ public class LR {
 
 
 
-    private String find() throws Exception{//找到之后是"+","*",...中的哪一个,都不属于则报错
-        int num_flag=0;
-        String next=null;//next 代表整个字符串里 下一个有效的输入 (标识符,符号)
-        if(isDigit(input.charAt(index))){
-            index++;
-            while (isDigit(input.charAt(index))){ index++; }
-            return "i";
-        }
-        else if(isLetter(input.charAt(index))){
-            index++;
-            int flag=0;
 
-            while (isLetter(input.charAt(index))){ index++; flag++;}
 
-            if(flag==0){
-                if(keywords.containsKey(input.charAt(index-1))){
-                    return input.charAt(index-1)+"";
-                }
+    private void process(){//处理不同的移进或规约
+
+        while (true) {
+
+            if (act < 0) {
+
             }
-            return "i";
+
         }
-        else if(keywords.containsKey(input.charAt(index))){
-            index++;
-            return input.charAt(index)+"";
+    }
+
+
+
+    private void errorMessage() throws Exception{//显示出错原因
+        throw new Exception("i don't know");
+    }
+
+    /*
+    将初始输入转换成标准格式
+     */
+    private void find() throws Exception{//找到之后是"+","*",...中的哪一个,都不属于则报错
+        String out = "";
+        while(index<input.length()) {
+            if (isDigit(input.charAt(index))) {
+                index++;
+                while (isDigit(input.charAt(index))) {
+                    index++;
+                }
+                out += "i";
+            } else if (isLetter(input.charAt(index))) {
+                String tmp = "";
+                int flag = 0;
+
+                while (isLetter(input.charAt(index))) {
+                    tmp+=input.charAt(index);
+                    flag++;
+                    index++;
+                }
+                if(flag!=0){
+                    while (isDigit(input.charAt(index))){
+                        tmp+=input.charAt(index);
+                        index++;
+                    }
+                }
+                if (keywords.containsKey(tmp)) {
+                    out += tmp;
+                }else {
+                    out+="i";
+                }
+
+            } else if (keywords.containsKey(input.charAt(index)+"")) {
+                index++;
+                out += input.charAt(index-1) + "";
+            } else {
+                throw new Exception("第" + (index + 1) + "个输入字符"+input.charAt(index)+"为非法输入!");
+            }
         }
-        else {
-            throw new Exception("第"+(index+1)+"个输入字符为非法输入!");
-        }
+        input = out ;
     }
 
 
@@ -127,26 +169,6 @@ public class LR {
     {
         return digit >= '0' && digit <= '9';
     }
-    //判断是否是$与下划线
-    boolean is$_(char letter)
-    {
-        return (letter == '$') || (letter == '_');
-    }
-    boolean isComment1_s(char letter)
-    {
-        return (letter == '$') || (letter == '_');
-    }
-    boolean isComment1_e(char letter)
-    {
-        return (letter == '$') || (letter == '_');
-    }
-    boolean isComment2_s(char letter)
-    {
-        return (letter == '$') || (letter == '_');
-    }
-    boolean isComment2_e(char letter)
-    {
-        return (letter == '$') || (letter == '_');
-    }
+
 
 }
