@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class Main {
-    public static void main(String arg[]){
+    public static void main(String[] arg){
 
         System.out.println("Please enter an arithmetic expression to analyse!");
         BufferedReader in=new BufferedReader(new InputStreamReader(System.in));
