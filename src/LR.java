@@ -40,15 +40,15 @@ public class LR {
     // 1~100 代表移进
     // >101 代表规约
 
-    private Stack symbol_stack = new Stack();//符号栈
-    private Stack state_stack = new Stack();//状态栈
-    private String input = null; //输入串,初始化时默认加上#结尾
+    private Stack<Character> symbol_stack = new Stack();//符号栈
+    private Stack<Integer> state_stack = new Stack();//状态栈
+    private String input = ""; //输入串,初始化时默认加上#结尾
 
     int index=0;//记录当前读到字符串第几个字符
     HashMap<String,Integer> keywords = new HashMap<String,Integer>();
 
     private int state=0;//记录一次状态
-    String symbol = "";//记录找到的预设符号
+    Character symbol ;//记录找到的预设符号
     int act = -1;//记录对应的表格内的数字
 
     public LR (String input){//初始化分析
@@ -56,7 +56,7 @@ public class LR {
         init_keywords();
         try {
             find();//将初始输入转换成标准格式
-            symbol="#";
+            symbol='#';
             state=0;
             state_stack.push(state);
             symbol_stack.push(symbol);//初始化栈
@@ -80,14 +80,10 @@ public class LR {
     public void show(){
 
         try{
-            while( (act = table[state][keywords.get(symbol)]) !=0 ){
+            while( (act = table[state_stack.peek()][keywords.get(input.charAt(index)+"")]) !=0 ){
                 process();
             }
-            if(act==0){
-                System.out.println("ok fine!");
-            }
-
-        System.out.println(input);
+            System.out.println("表达式正确,分析成功!");
 
         }catch (Exception e){
             System.out.println(e.getMessage());
@@ -95,24 +91,70 @@ public class LR {
     }
 
 
-
-
-
-    private void process(){//处理不同的移进或规约
-
-        while (true) {
-
+    private void process() throws Exception{//处理不同的移进或规约
+        try{
             if (act < 0) {
-
+                errorMessage();
+            }
+            else if(act>100){//规约
+                convention();//太长了不好看,到别的地方写
+            }
+            else if(act>0){//移进
+                symbol_stack.push(input.charAt(index++));//符号栈进栈一个输入,输入串指向下个字符
+                state_stack.push(act);//状态栈进栈要移进的状态
             }
 
+        }catch (Exception e){
+            throw e;//我只是错误的搬运工
         }
     }
 
 
+    private void convention(){//规约
+        Character get_symbol ;
+        int get_state ;
+        switch (act) {
+            case 104 : {
+                symbol_stack.pop();
+                state_stack.pop();
+
+                symbol_stack.push('E');
+                state = state_stack.peek();
+                act = table[state][keywords.get("E")];
+
+                state_stack.push(act);
+                break;
+            }
+            case 103 : { }
+            case 102: {}
+            case 101 : {
+                //弹出(E)
+                symbol_stack.pop();
+                symbol_stack.pop();
+                symbol_stack.pop();
+                //弹出状态
+                state_stack.pop();
+                state_stack.pop();
+                state_stack.pop();
+                //加入规约的'E'
+                symbol_stack.push('E');
+                //GOTO处理
+                state = state_stack.peek();
+                act = table[state][keywords.get("E")];
+                state_stack.push(act);
+                break;
+            }
+        }
+    }
 
     private void errorMessage() throws Exception{//显示出错原因
-        throw new Exception("i don't know");
+        switch (act){
+            case -1: throw new Exception("处于状态:"+state+" ,缺少运算对象,即id或左括号,而实际遇到的是':'"+input.charAt(index)+"'");
+            case -2: throw new Exception("处于状态:"+state+" ,右括号不配对" );
+            case -3: throw new Exception("处于状态:"+state+" ,缺少操作符," + "而实际遇到的是'"+input.charAt(index)+"'");
+            case -4: throw new Exception("处于状态:"+state+" ,缺少操作符或右括号," + "而实际遇到的是'"+input.charAt(index)+"'");
+        }
+        throw new Exception("error");//程序要体面就让它体面,否则就帮它体面
     }
 
     /*
