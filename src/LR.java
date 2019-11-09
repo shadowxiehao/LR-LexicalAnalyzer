@@ -145,9 +145,9 @@ public class LR {
 
     private void errorMessage() throws Exception{//显示出错原因
         switch (act){
-            case -1: throw new Exception("处于状态:"+state+" ,缺少运算对象,即id或左括号,而实际遇到的是':'"+input.charAt(index)+"'");
+            case -1: throw new Exception("处于状态:"+state+" ,缺少运算对象,即id或左括号,而实际遇到的是'"+input.charAt(index)+"'");
             case -2: throw new Exception("处于状态:"+state+" ,右括号不配对" );
-            case -3: throw new Exception("处于状态:"+state+" ,缺少操作符," + "而实际遇到的是'"+input.charAt(index)+"'");
+            case -3: throw new Exception("处于状态:"+state+" ,缺少操作符," + "而实际遇到的是'"+input.charAt(index)+"'");//当遇到i或者)时用
             case -4: throw new Exception("处于状态:"+state+" ,缺少操作符或右括号," + "而实际遇到的是'"+input.charAt(index)+"'");
         }
         throw new Exception("error");//程序要体面就让它体面,否则就帮它体面
